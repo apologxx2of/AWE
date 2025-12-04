@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>{{ APP_TITLE or "AWE" }}{% if title %} — {{ title }}{% endif %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}">
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.7/dist/purify.min.js"></script>
+</head>
+<body>
+
+<div class="wrapAll clearfix">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="logo" style="max-width:100px;margin-top:47.5px;">
+            </a>
+        </div>
+
+        <div class="navigation">
+            <ul>
+                <li><a href="{{ url_for('home') }}">Página principal</a></li>
+                <li><a href="{{ url_for('goto', slug='Conteúdo destacado') }}">Conteúdo destacado</a></li>
+                <li id="n-randompage"><a href="{{ url_for('goto', slug='random') }}">Página aleatória</a></li>
+                <li><a href="#indevelopment">Eventos atuais</a></li>
+            </ul>
+
+            <h3>Interação</h3>
+            <ul>
+                <li><a href="{{ url_for('ajuda') }}">Ajuda</a></li>
+                <li><a href="{{ url_for('about') }}">Sobre</a></li>
+                <li><a href="{{ url_for('portal') }}">Portal</a></li>
+                <li><a href="{{ url_for('afluentes', slug=title or '') }}">Páginas afluentes</a></li>
+                <li><a href="{{ url_for('recent_changes') }}">Alterações relacionadas</a></li>
+                <li><a href="{{ url_for('Upload') }}">Carregar ficheiro</a></li>
+                <li><a href="{{ url_for('PagEspecial') }}">Páginas especiais</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Section -->
+    <div class="mainsection">
+
+        <!-- User Menu -->
+        <div class="headerLinks">
+            {% if cu %}
+                <a style="color: gray;" href="{{ url_for('user_page', username=cu['username']) }}"><span class="user">{{ cu['username'] }}</span></a>
+                <a href="{{ url_for('profile', username=cu['username']) }}"></a>
+                <a href="{{ url_for('contributions', username=cu['username']) }}">Contribuições</a>
+                {% if cu['username'] == 'admin' %}
+                    <span class="np-badge">Admin</span>
+                {% endif %}
+                <a href="{{ url_for('logout') }}">Sair</a>
+            {% else %}
+                <span class="user">Não conectado</span>
+                <a href="{{ url_for('login') }}">Entrar</a>
+                <a href="{{ url_for('register') }}">Criar conta</a>
+            {% endif %}
+        </div>
+        
+        <!-- Search -->
+        <div id="MsimpleSearch">
+           <form action="{{ url_for('search') }}" method="get">
+               <input type="text" name="q" id="searchInput" placeholder="Pesquisar na {{ APP_TITLE }}"
+                   value="{{ request.args.get('q','') }}" size="12" />
+               <button id="submitSearch" type="submit">Pesquisar</button>
+            </form>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs clearfix">
+            <div class="tabsLeft">
+                <ul>
+                    <li><a href="{{ url_for('home') }}" id="tab-article" class="active">Artigo</a></li>
+                    <li><a href="{{ url_for('home') }}" id="tab-discussion">Discussão</a></li>
+                    <li><a href="{{ url_for('goto', slug=('history/' ~ (slug or ''))) }}" id="view-history" class="{{ 'selected' if request.endpoint=='history' else '' }}">Histórico</a></li>
+                </ul>
+            </div>
+
+            <!-- Search -->
+            <div id="simpleSearch">
+                <form action="{{ url_for('search') }}" method="get">
+                    <input type="text" name="q" id="searchInput" placeholder="Pesquisar na {{ APP_TITLE }}"
+                           value="{{ request.args.get('q','') }}" size="12" />
+                    <button id="submitSearch" type="submit">Pesquisar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Page Heading -->
+
+        <!-- Body Content -->
+        <div id="content" class="mw-body" role="main">
+
+            <!-- Conteúdo do artigo -->
+            <div id="article-content">
+                <div id="bodyContent" class="mw-content">                  
+                  {% block content %}{% endblock %}
+              </div>
+            </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="np-flashes">
+                    {% for cat, msg in messages %}
+                        <li class="{{ cat }}" id="flash" style="border: 1px #b3271d solid; background-color: #c7291e; color: white;">{{ msg }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% endwith %}
+
+        </div>
+
+        <!-- Footer -->
+        <div class="pagefooter">        
+            Conteúdo disponível sob <a href="https://creativecommons.org/licenses/{{ LICENSE[3:] }}/4.0/deed.pt-br">{{ LICENSE }} 4.0</a><br>
+            Projeto {{ APP_TITLE }} utilizando a <a href="https://sites.google.com/view/ApoloWikiEngine">AWE</a>.<br>
+            Última edição: {{ last_edited|default("Desconhecida") }}
+            Template por <a href="http://html5-templates.com/" target="_blank" rel="nofollow">HTML5 Templates</a>
+            <a href="https://creativecommons.org/licenses/{{ LICENSE[3:] }}/4.0/deed.pt-br"><img src="{{ url_for('static', filename='img/' ~ LICENSE ~ '.png') }}" width="115px" height="40px"></a>
+            <div class="footerlinks">
+                <a href="{{ url_for('privacy') }}">Política de privacidade</a>
+                <a href="{{ url_for('about') }}">Sobre</a>
+                <a href="{{ url_for('terms') }}">Termos</a>
+                <a href="{{ url_for('cookie_statement') }}">Cookies</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="{{ url_for("static", filename="js/vendor/jquery-1.12.0.min.js") }}"><\/script>');
+
+$(document).ready(function() {
+    // Estado inicial
+    $(".article-body").show();
+    $(".firstHeading").show();
+    $(".discussion-content").hide();
+    $(".history-content").hide();
+
+    $("#tab-article").click(function(e) {
+        e.preventDefault();
+        $(".article-body").show();
+        $(".firstHeading").show();
+        $(".discussion-content").hide();
+        $(".history-content").hide();
+        $("#article-render").show();
+
+        $("#tab-article").addClass("active");
+        $("#tab-discussion").removeClass("active");
+        $("#view-history").removeClass("active");
+    });
+
+    $("#tab-discussion").click(function(e) {
+        e.preventDefault();
+        $(".article-body").hide();
+        $(".firstHeading").hide();
+        $(".discussion-content").show();
+        $(".history-content").hide();
+        $("#article-render").hide();
+
+        $("#tab-discussion").addClass("active");
+        $("#tab-article").removeClass("active");
+        $("#view-history").removeClass("active");
+    });
+
+    $("#view-history").click(function(e) {
+        e.preventDefault();
+        $(".article-body").hide();
+        $(".firstHeading").hide();
+        $(".discussion-content").hide();
+        $(".history-content").show();
+        $("#article-render").hide();
+
+        $("#view-history").addClass("active");
+        $("#tab-article").removeClass("active");
+        $("#tab-discussion").removeClass("active");
+    });
+});
+</script>
+<script src="{{ url_for('static', filename='script.js') }}" defer></script>
+<script src="{{ url_for('static', filename='default.js') }}" defer></script>
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="article">
+    <h2>Versão do artigo: {{ title }}</h2>
+    <p><strong>Data da versão:</strong> {{ version.ts|fmt_dt }}</p>
+    <p><strong>Autor:</strong> {{ version.user }}</p>
+
+    <div class="version-content" style="border:1px solid #ccc; padding:10px; background:#f7f7f5;">
+        {{ version.content|safe }}
+    </div>    
+
+    <p style="margin-top:10px;">
+        <a href="{{ url_for('goto', slug=slug) }}">Voltar ao artigo</a>
+    </p>
+</div>
+{% endblock %}

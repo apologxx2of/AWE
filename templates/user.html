@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="article">
+    <div style="display: inline-block;">
+        <h2 id="firstHeading">
+            Perfil de {{ username }}
+            {% if is_owner %}
+                <span onclick="edit()" class="material-icons" style="color: black; margin-top: 10px; display: inline-block; background:none; border:none; cursor:pointer;">edit</span>
+            {% endif %}
+        </h2>
+    </div>
+
+    <div class="article-body">
+        {{ article['content']|safe }}
+    </div>
+
+    <div class="discussion-content">
+        {% if not discussion_topics %}
+            <p>Não há tópicos ainda. Inicie um novo abaixo.</p>
+        {% endif %}
+
+        {% for t in discussion_topics %}
+        <section class="np-topic" style="border:1px solid #ddd;padding:8px;margin-bottom:8px;">
+            <h4>{{ t['topic_title'] or "(Sem título)" }}</h4>
+            <small class="np-meta">{{ t['ts']|fmt_dt }} — {{ t['user'] }}</small>
+            <div style="padding:6px 0;">{{ t['comment_text'] }}</div>
+            <button type="button" style="background-color: transparent; border:none; display:inline; font-size:16px;" onclick="openReplyForm({{ t['id'] }})">
+                <img src="{{ url_for('static', filename='img/reply.png') }}" width="25" height="25">
+                <strong style="color: #2e47b3;">Responder</strong>
+            </button>
+
+            <div class="discussion-replies" style="margin-left:16px;">
+                {% for r in discussion_replies.get(t['id'], []) %}
+                <div style="border-top:1px dashed #eee;padding:6px 0;">
+                    <small class="np-meta">{{ r['ts']|fmt_dt }} — {{ r['user'] }}</small>
+                    <div>
+                        {% if r['reply_to'] %}
+                        <strong style="color: #2e47b3; font-size:12px;">@{{ r['reply_to'] }} respondendo</strong>
+                        {% endif %}
+                        {{ r['comment_text'] }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+
+        <hr>
+        <h4>Iniciar novo tópico</h4>
+        <form class="np-form" action="{{ url_for('add_user_discussion', username=username) }}" method="post">
+            <input type="text" name="topic_title" placeholder="Título do tópico (opcional)" style="width:164px;">
+            <br>
+            <textarea name="comment_text" placeholder="Mensagem" rows="4" required></textarea>
+            <br>
+            <button type="submit" style="background-color:#2e47b3;color:white;border-radius:0;">Publicar</button>
+        </form>
+    </div>
+
+    {% if is_owner %}
+    <div id="edit" style="display:none;">
+        <hr>
+        <h3>Editar perfil</h3>
+        <form action="{{ url_for('user_page', username=username) }}" method="post">
+            <textarea name="content" rows="10" style="width:100%;">{{ article['content'] }}</textarea>
+            <br>
+            <button type="submit" style="background-color:#2e47b3;color:white;padding:6px 12px;border:none;border-radius:4px;">Salvar</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Form único de reply -->
+    <form id="replyForm" action="" method="post" style="margin-top:8px;display:none;">
+        <h2 id="replying-to"></h2>
+        <input type="text" name="reply_to" placeholder="Responder a? (opcional)" style="width:164px;">
+        <br>
+        <textarea name="reply_text" rows="2" placeholder="Escreva uma resposta..." required></textarea>
+        <br>
+        <button type="submit" style="background-color:#2e47b3;color:white;border-radius:0;">Responder</button>
+    </form>
+</div>
+
+<script>
+function edit() {
+    const form = document.getElementById("edit");
+    if (!form) return;
+    form.style.display = (form.style.display === "none" || form.style.display === "") ? "block" : "none";
+}
+
+function openReplyForm(topicId) {
+    const form = document.getElementById("replyForm");
+    if (!form) return;
+
+    // Atualiza action e título
+    form.action = `/user/{{ username }}/discussion/${topicId}/reply`;
+    document.getElementById("replying-to").textContent = `Respondendo ao tópico ${topicId}`;
+
+    // Toggle display
+    form.style.display = "block";
+
+    // Scroll suave
+    smoothScrollFast(form);
+}
+
+function smoothScrollFast(target) {
+    const start = window.scrollY;
+    const end = target.getBoundingClientRect().top + window.scrollY;
+    const duration = 300;
+    const startTime = performance.now();
+
+    function anim(time) {
+        const progress = Math.min((time - startTime) / duration, 1);
+        const eased = progress < 0.5
+            ? 2 * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 2)/2;
+        window.scrollTo(0, start + (end-start)*eased);
+        if(progress < 1) requestAnimationFrame(anim);
+    }
+
+    requestAnimationFrame(anim);
+}
+</script>
+{% endblock %}

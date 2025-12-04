@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="article">
+  <h2>Resultados para "{{ q }}"</h2>
+  <ul>
+    {% if results %}
+      {% for r in results %}
+        <div style="">
+          <p>Você quer criar o artigo "<a href="{{ url_for('edit_article', slug=q) }}" style="color: black;"><strong style="color: red;">{{ q }}</strong></a>"?</p>
+        </div>
+        <li id="results" style="border: 1px #c4c4c4 solid; background-color: #f7f7f5; padding: 5px; margin-bottom: 5px;">
+          <a href="{{ url_for('goto', slug=r['slug']) }}">{{ r['title'] }}</a>
+        </li>
+      {% endfor %}
+    {% else %}
+      <li>Nada encontrado.</li>
+    {% endif %}
+  </ul>
+
+  {% if not results and q %}
+    <div style="">
+      <p>Você quer criar o artigo "<a href="{{ url_for('edit_article', slug=q) }}" style="color: black;"><strong style="color: red;">{{ q }}</strong></a>"?</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

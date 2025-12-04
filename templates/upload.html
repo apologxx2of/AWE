@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="article">
+  <h2>Carregar ficheiro</h2>
+
+  <form method="post" enctype="multipart/form-data">
+    
+    <div class="input-row">
+      <label for="fname">Nome do ficheiro:</label>
+      <input type="text" id="fname" name="filename" class="input-old" style="width: 164px">
+      <label for="fdesc">Descrição:</label>
+      <textarea id="fdesc" name="description" class="input-old" rows="4"></textarea>
+      <input type="file" name="file" id="fileField" style="width: 170px;">
+    </div>
+
+    <button type="submit" class="btn-flat">Enviar</button>
+  </form>
+</div>
+
+<style>
+.upload-2010 {
+  max-width: 600px;
+  margin: 40px auto;
+  font-family: "Helvetica", "Arial", sans-serif;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  padding: 20px 25px;
+}
+
+.upload-2010 h2 {
+  margin: 0 0 20px 0;
+  font-size: 22px;
+  font-weight: normal;
+  color: #222;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 8px;
+}
+
+/* file input estilo *feio vintage* */
+.input-row input[type="file"] {
+  border: 1px solid #aaa;
+  padding: 6px;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+/* botão estilo 2010 total */
+.btn-flat {
+  margin-top: 14px;
+  background: #e6e6e6;
+  border: 1px solid #888;
+  color: #000;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  text-transform: none;
+}
+
+.btn-flat:hover {
+  background: #dcdcdc;
+}
+</style>
+{% endblock %}

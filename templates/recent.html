@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="article">
+  <h2>Alterações recentes</h2>
+  <ul>
+  {% for r in changes %}
+    <li style="border: 1px #c4c4c4 solid; background-color: #f7f7f5; padding: 5px; margin-bottom: 5px;">
+      {{ r['title'] }} — <small>{{ r['ts']|fmt_dt }}</small><br><small><a href="{{ url_for('user_page', username=r['user']) }}">{{ r['user'] }}</a></small>
+    </li>
+  {% else %}
+    <li>Nenhuma alteração recente.</li>
+  {% endfor %}
+</ul>
+</div>
+{% endblock %}

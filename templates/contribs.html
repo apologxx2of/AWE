@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="article">
+  <h2>Contribuições</h2>
+  <ul>
+    {% for c in contribs %}
+      <li style="border: 1px #c4c4c4 solid; background-color: #f7f7f5; padding: 5px; margin-bottom: 5px;">
+        <a href="{{ url_for('goto', slug=c['slug']) }}">{{ c['title'] or c['slug'] }}</a>
+        — <small>{{ c['ts']|fmt_dt }}</small>
+      </li>
+    {% else %}
+      <li>Nenhuma contribuição encontrada.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

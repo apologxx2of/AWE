@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="article">
+    {% if slug == "Lusopédia:PP" %}
+    <div style="display: inline-block;">
+        <h2 id="firstHeading" class="firstHeading">
+            {% if cu %}
+            Bem-vindo(a), {{ cu['username'] }}
+            {% else %}
+            Bem-vindo(a)
+            {% endif %}
+            <a href="{{ url_for('goto', slug=('edit_article/' ~ (slug or ''))) }}" id="edit-article" style="vertical-align: middle; display: inline-block;">
+                <span class="material-icons" style="color: black;">edit</span>
+            </a>
+        </h2>
+    </div>
+    {% else %}
+    <div style="display: inline-block;">
+        <h2 id="firstHeading">
+            {{ title }}
+            <a href="{{ url_for('goto', slug=('edit_article/' ~ (slug or ''))) }}" id="edit-article" style="vertical-align: middle; display: inline-block;">
+                <span class="material-icons" style="color: black;">edit</span>
+            </a>
+        </h2>
+    </div>
+    {% endif %}
+
+    <div id="article-content">
+        <div id="raw-wikitext-content" style="display:none;">
+            {{ content|safe }}
+        </div>
+
+        <div id="article-render" id="article-body" class="article-body">
+            <p>Carregando conteúdo...</p>
+        </div>
+
+        <div class="discussion-content">
+            {% if not discussion_topics %}
+                <p>Não há tópicos ainda. Inicie um novo abaixo.</p>
+            {% endif %}
+
+            {% for t in discussion_topics %}
+            <section class="np-topic" style="border:1px solid #ddd;padding:8px;margin-bottom:8px;">
+                <h4>{{ t['topic_title'] or "(Sem título)" }}</h4>
+                <small class="np-meta">{{ t['ts']|fmt_dt }} — {{ t['user'] }}</small>
+                <div style="padding:6px 0;">{{ t['comment_text'] }}</div>
+                <button type="button" style="background-color: transparent; border:none; display:inline; font-size:16px;" onclick="openReplyForm({{ t['id'] }})">
+                    <img src="{{ url_for('static', filename='img/reply.png') }}" width="25" height="25">
+                    <strong style="color: #2e47b3;">Responder</strong>
+                </button>
+
+                <div class="discussion-replies" style="margin-left:16px;">
+                    {% for r in discussion_replies.get(t['id'], []) %}
+                    <div style="border-top:1px dashed #eee;padding:6px 0;">
+                        <small class="np-meta">{{ r['ts']|fmt_dt }} — {{ r['user'] }}</small>
+                        <div>
+                            {% if r['reply_to'] %}
+                            <strong style="color: #2e47b3; font-size:12px;">@{{ r['reply_to'] }} respondendo</strong>
+                            {% endif %}
+                            {{ r['comment_text'] }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endfor %}
+
+            <hr>
+            <h4>Iniciar novo tópico</h4>
+            <form class="np-form" action="{{ url_for('add_discussion', slug=slug) }}" method="post">
+                <input type="text" name="topic_title" placeholder="Título do tópico (opcional)" style="width:164px;">
+                <br>
+                <textarea name="comment_text" placeholder="Mensagem" rows="4" required></textarea>
+                <br>
+                <button type="submit" style="background-color:#2e47b3;color:white;border-radius:0;">Publicar</button>
+            </form>
+        </div>
+
+        <div class="history-content">
+            <h2>Histórico do artigo: {{ title }}</h2>
+            {% if not article_history %}
+            <p>Não há histórico disponível para este artigo.</p>
+            {% else %}
+            <table class="history-table" style="width:100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="border-bottom: 1px solid #ccc; padding: 4px;">Data</th>
+                        <th style="border-bottom: 1px solid #ccc; padding: 4px;">Autor</th>
+                        <th style="border-bottom: 1px solid #ccc; padding: 4px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for version in article_history %}
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 4px;">{{ version.ts|fmt_dt }}</td>
+                        <td style="padding: 4px;">{{ version.user }}</td>
+                        <td style="padding: 4px;">
+                            <a href="{{ url_for('view_version', slug=slug, version_id=version.id) }}">Ver versão</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+
+        <div id="mw-references">
+            <ol class="references"></ol>
+        </div>
+
+        <!-- Form único de reply (coloque perto do final do article.html, onde estava) -->
+        <form id="replyForm" action="" method="post" style="margin-top:8px;display:none;">
+            <h2 id="replying-to"></h2>
+            <input type="text" name="reply_to" placeholder="Responder a? (opcional)" style="width:164px;">
+            <br>
+            <textarea name="reply_text" rows="2" placeholder="Escreva uma resposta..." required></textarea>
+            <br>
+            <button type="submit" style="background-color:#2e47b3;color:white;border-radius:0;">Responder</button>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='wiki.js') }}"></script>
+
+<script>
+/*
+  Uso de url_for para gerar um exemplo de URL e trocar o `0` pelo topicId real.
+  Isso evita problemas com caracteres estranhos em slug (ex: "user:gx").
+*/
+const replyUrlTemplate = "{{ url_for('reply_discussion', slug=slug, topic_id=0) }}"; 
+// ex: "/article/user%3Agx/discussion/0/reply" (Flask faz o encoding/format correto)
+
+// Função para abrir o form e setar action dinamicamente
+function openReplyForm(topicId) {
+    const form = document.getElementById("replyForm");
+    if (!form) return;
+
+    // Substitui apenas a parte /0/ pelo topicId real.
+    // Usa replace em vez de construir string manualmente para preservar encoding do slug.
+    const action = replyUrlTemplate.replace('/0/', `/${topicId}/`);
+    form.action = action;
+
+    document.getElementById("replying-to").textContent = `Respondendo ao tópico ${topicId}`;
+
+    // mostra o form e faz scroll suave
+    form.style.display = "block";
+    smoothScrollFast(form);
+}
+
+// scroll suave (idêntico ao seu)
+function smoothScrollFast(target) {
+    const start = window.scrollY;
+    const end = target.getBoundingClientRect().top + window.scrollY - 20; // -20 para ficar visível
+    const duration = 300;
+    const startTime = performance.now();
+
+    function anim(time) {
+        const progress = Math.min((time - startTime) / duration, 1);
+        const eased = progress < 0.5
+            ? 2 * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+        window.scrollTo(0, start + (end - start) * eased);
+        if (progress < 1) requestAnimationFrame(anim);
+    }
+    requestAnimationFrame(anim);
+}
+
+// opcional: fecha o form se clicar fora dele
+document.addEventListener('click', function(e) {
+    const form = document.getElementById("replyForm");
+    if (!form || form.style.display === 'none') return;
+    if (!form.contains(e.target) && !e.target.matches('button[onclick^="openReplyForm"], button[type="button"]')) {
+        // se clicou fora do form e não foi o botão responder, fecha
+        form.style.display = 'none';
+    }
+});
+
+// renderiza wikitext
+const wikitext = {{ content|tojson }};
+const html = WikiParser.parse(wikitext, {
+    linkResolver: slug => `/goto/${encodeURIComponent(slug)}`,
+    templateResolver: (name, params) => {
+        if (name === 'stub') return `<span class="stub">[Stub]</span>`;
+        return null;
+    }
+});
+document.getElementById('article-render').innerHTML = html;
+</script>
+{% endblock %}
